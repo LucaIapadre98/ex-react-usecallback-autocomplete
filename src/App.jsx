@@ -3,34 +3,55 @@
 //  Per evitare richieste API eccessive, devi ottimizzare la ricerca con il debounce.
 
 // Crea un campo di input (<input type="text">) in cui l’utente può digitare.
-
 // Effettua una chiamata API a: 
 // /products?search=[query]
-
 // La query deve essere sostituita con il testo digitato.
 // Mostra i risultati API sotto l'input in una tendina di suggerimenti.
-
 // Se l'utente cancella il testo, la tendina scompare.
-
-
 // Obiettivo: Mostrare suggerimenti dinamici in base alla ricerca dell'utente.
 
-import { useState, useEffect } from 'react';
+// Attualmente, ogni pressione di tasto esegue una richiesta API. 
+// Questo è inefficiente!
+// Implementa una funzione di debounce per ritardare la chiamata API 
+// fino a quando l’utente smette di digitare per un breve periodo (es. 300ms)
+// Dopo l’implementazione, verifica che la ricerca non venga eseguita immediatamente a ogni tasto premuto, ma solo dopo una breve pausa.
+// Obiettivo: Ridurre il numero di richieste API e migliorare le prestazioni.
+
+const debounce = (callback, delay) =>{
+  let timer;
+  return (value) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      callback (value);
+    }, delay);
+  };
+};
+
+import { useState, useEffect, useCallback } from 'react';
 
 function App() {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
 
-  useEffect(() => {
+
+  const fectchProducts = async (query) => {
     if(!query.trim()){
       setSuggestions([]);
       return;
     }
+    try {
+      const response = await  fetch(`http://freetestapi.com/api/v1/products?search=${query}`)
+      const data = await response.json ();
+      setSuggestions(data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  }
 
-    fetch(`http://freetestapi.com/api/v1/products?search=${query}`)
-      .then(res => res.json())
-      .then(data => setSuggestions(data))
-      .catch(err => console.error('Error fetching products:', err));
+  const debouncedFetchProducts = useCallback(debounce(fectchProducts, 500), []);
+
+  useEffect(() => {
+    debouncedFetchProducts(query);
   }, [query]);
 
   return (
