@@ -21,8 +21,6 @@ function App() {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
 
-  
-
   useEffect(() => {
     if(!query.trim()){
       setSuggestions([]);
